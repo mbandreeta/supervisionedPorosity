@@ -73,13 +73,14 @@ def interactiveCorrectionNaive(Esolid,Evoid,filtered,mask,porosity_estimated=0,t
 	print("      %5.1f            %5.1f           %5.1f            %5.1f            %5.1f" %(porosity_estimated,porosity,Evoid,Esolid,error))
 	return porosity_matrix;
 	
-def run_porosity(img,unit,porosity_estimated,resize=True,plot=False,pos=100):
+def run_porosity(img,resolution,porosity_estimated,resize=True,plot=False,pos=100):
 	from scipy.ndimage import median_filter 
 	import SimpleITK as sitk
 	print("Applying filter.");
 	if(resize):
 		sitk_image = resample_image(sitk.GetImageFromArray(img))
-		img = sitk.GetArrayFromImage(sitk_image);	
+		img = sitk.GetArrayFromImage(sitk_image);
+		resolution = resolution*2;
 	img = histogram_normalization(img)
 	filtered = median_filter(img,2);
 	print("Creating mask.");
@@ -91,9 +92,9 @@ def run_porosity(img,unit,porosity_estimated,resize=True,plot=False,pos=100):
 	print(Esolid,Evoid)
 	porosity_matrix = interactiveCorrectionNaive(Esolid,Evoid,filtered,mask,porosity_estimated)
 	segmented =(1-porosity_matrix)*mask;
-	map_radius,map_surface = radiusMap(porosity_matrix,unit*2)
+	map_radius,map_surface = radiusMap(porosity_matrix,resolution)
 	print("Average sample porosity:", np.sum(porosity_matrix)/np.sum(mask))
 	if(plot):
 		showData(img,filtered,segmented,pos)
 		showDataColor(porosity_matrix,map_radius,map_surface,pos)
-	return porosity_matrix,map_radius,map_surface
+	return porosity_matrix,resolution,map_radius,map_surface

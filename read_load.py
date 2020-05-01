@@ -18,9 +18,9 @@ def getFilepath():
 
 def openData():
 	import glob
-	import skimage
+	from skimage.io import imread
 	filepath,unit,filename,readfilepath = getFilepath();
-	img = ((np.array([skimage.io.imread(file) for file in sorted(glob.glob(readfilepath))])).transpose(2,1,0))
+	img = ((np.array([imread(file) for file in sorted(glob.glob(readfilepath))])).transpose(2,1,0))
 	img = img[:,:,50:np.min([1550,img.shape[2]-50])];
 	return img,unit,filename,filepath;
 

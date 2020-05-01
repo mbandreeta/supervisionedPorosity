@@ -28,14 +28,18 @@ import math
 if __name__ == '__main__':
     print("\n######### Beginning the image processing #########\n")
 
+    print("Open the image file (select the first image file .tif)")
+    img,resolution,filename,filepath = openData();
+    print("Sample filename:",filename)
+    print("\nResolution:",resolution,"um")
+
+
     porosity_estimated = 15;
     porosity_estimated = float(input ("Enter the expected porosity (default = 15%):"))
     
 
-    print("Open the image file (select the first image file .tif)")
-    img,resolution,filename,filepath = openData();
-    print("Filename:",filename)
-    print("\nResolution:",resolution,"um")
+    porosity_matrix,nresolution,map_radius,map_surface = run_porosity(img,resolution,porosity_estimated,resize=True,plot=False)
+	
+    saveNiftiObject(porosity_matrix,nresolution,filename)
 
-    porosity_matrix,map_radius,map_surface = run_porosity(img,resolution,porosity_estimated,resize=True,plot=True)
-
+    print("Saving porosity matrix as nifiti file:", filename+'.nii'," voxel resolution:", nresolution)
