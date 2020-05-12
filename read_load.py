@@ -14,13 +14,16 @@ def getFilepath():
 	filename = dir_names[-1].split("nm")[0];
 	unit = [int(s) for s in re.findall(r'\d+', filename)][-1]/1000;
 	readfilepath = filepath.replace(dir_names[-1],"*."+extension); 
-	return filepath,unit,filename,readfilepath;
+	return filepath,unit,filename,readfilepath,extension;
 
 def openData():
 	import glob
 	from skimage.io import imread
-	filepath,unit,filename,readfilepath = getFilepath();
-	img = ((np.array([imread(file) for file in sorted(glob.glob(readfilepath))])).transpose(2,1,0))
+	filepath,unit,filename,readfilepath,extension = getFilepath();
+	if(extension=='tif'):
+		img = ((np.array([imread(file) for file in sorted(glob.glob(readfilepath))])).transpose(2,1,0))
+	else:
+		[img,unit] = getNiftiObject(filepath);
 	img = img[:,:,50:np.min([1550,img.shape[2]-50])];
 	return img,unit,filename,filepath;
 
@@ -40,7 +43,6 @@ def getNiftiObject(filepath):
 	
 def saveNiftiObject(data,unit,filepath):
 	import nibabel as nib;
-	print(unit);
 	header_ = nib.Nifti1Header();
 	header_['pixdim'] = np.array([ unit ,unit,unit,unit ,  1. ,  1. ,  1. ,  1. ], dtype=np.float32);
 	nifti_img = nib.Nifti1Image(data, affine=None, header=header_);

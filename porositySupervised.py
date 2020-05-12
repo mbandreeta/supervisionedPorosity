@@ -27,19 +27,25 @@ import math
 
 if __name__ == '__main__':
     print("\n######### Beginning the image processing #########\n")
-
-    print("Open the image file (select the first image file .tif)")
+    print("Open the image file (select the first image file .tif, or a volume .nii)")
     img,resolution,filename,filepath = openData();
     print("Sample filename:",filename)
-    print("\nResolution:",resolution,"um")
-
-
-    porosity_estimated = 15;
-    porosity_estimated = float(input ("Enter the expected porosity (default = 15%):"))
-    
-
-    porosity_matrix,nresolution,map_radius,map_surface = run_porosity(img,resolution,porosity_estimated,resize=True,plot=False)
-	
-    saveNiftiObject(porosity_matrix,nresolution,filename)
-
-    print("Saving porosity matrix as nifiti file:", filename+'.nii'," voxel resolution:", nresolution)
+    print("Resolution:",resolution,"um")
+    resok = input ("Is the resolution correct? (y/n):")
+    if(resok=='n'):
+        resolution = float(input ("Enter the voxel resolution [micrometer]:"));
+    porosity_estimated = float(input ("Enter the expected porosity [%]:"))
+    resize_sample = input ("Resize sample? (y/n):")
+    if resize_sample == 'y':
+        from scipy.ndimage import zoom
+        percentage = float(input ("Enter the upscaling percentage(example: 50):"));
+        print("Resampling ",percentage,"%, original size:", img.shape);
+        percentage = percentage/100;
+        img = zoom(img,percentage);
+        resolution = resolution *(1/percentage);
+        print("Resampled size:", img.shape);
+        print("New voxel resolution:", resolution, 'um');
+    porosity_matrix,_ = run_porosity(img,resolution,porosity_estimated,resize=False,plot=False)
+    filename = filename+'_porosity.nii'
+    print("Saving porosity matrix as nifiti file:", filename," voxel resolution:", resolution)
+    saveNiftiObject(porosity_matrix,resolution,filename)

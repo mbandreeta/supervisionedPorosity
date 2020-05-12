@@ -53,7 +53,6 @@ def interactiveCorrectionNaive(Esolid,Evoid,filtered,mask,porosity_estimated=0,t
 	segmented = filtered.copy();
 	print("PorosityEntered","PorosityCalculated","LowThreshold","UpThreshold","     Error%")
 	while(error>tolerance):
-		print("      %5.1f            %5.1f           %5.1f            %5.1f            %5.1f" %(porosity_estimated,porosity,Evoid,Esolid,error))
 		segmented = filtered.copy();#filtered.copy();
 		segmented = ((segmented - Evoid)/(Esolid-Evoid));
 		segmented[filtered>=Esolid]=1; # solid region
@@ -66,35 +65,43 @@ def interactiveCorrectionNaive(Esolid,Evoid,filtered,mask,porosity_estimated=0,t
 		else:
 			step = step/2;
 			error = nerror;
+		print("      %5.1f            %5.1f           %5.2f            %5.2f            %5.1f" %(porosity_estimated,porosity,Evoid,Esolid,error))
 		if(porosity>porosity_estimated):
 			Esolid=Esolid-step;
 		else:
 			Esolid=Esolid+step;
-	print("      %5.1f            %5.1f           %5.1f            %5.1f            %5.1f" %(porosity_estimated,porosity,Evoid,Esolid,error))
+	print("      %5.1f            %5.1f           %5.2f            %5.2f            %5.1f" %(porosity_estimated,porosity,Evoid,Esolid,error))
+
 	return porosity_matrix;
 	
 def run_porosity(img,resolution,porosity_estimated,resize=True,plot=False,pos=100):
 	from scipy.ndimage import median_filter 
-	import SimpleITK as sitk
+	
 	print("Applying filter.");
-	if(resize):
-		sitk_image = resample_image(sitk.GetImageFromArray(img))
-		img = sitk.GetArrayFromImage(sitk_image);
-		resolution = resolution*2;
-	img = histogram_normalization(img)
-	filtered = median_filter(img,2);
+	# import SimpleITK as sitk
+	# if(resize):
+		# sitk_image = resample_image(sitk.GetImageFromArray(img))
+		# img = sitk.GetArrayFromImage(sitk_image);
+		# resolution = resolution*2;
+	filtered = histogram_normalization(img)
+	filtered = median_filter(filtered,1);
 	print("Creating mask.");
 	mask,obs = createMask(filtered);	
-	print("Naive Adjustment");
-	Evoid = skimage.filters.threshold_li(filtered);
+	print("Threshold Adjustment");
+	otsu01 = skimage.filters.threshold_otsu(filtered);
+	aux = filtered.copy();
+	aux = aux[aux<otsu01];
+	y,x = skimage.exposure.histogram(aux);
+	Evoid = np.argmax(y);
+	#Evoid = 0; #skimage.filters.threshold_otsu(filtered);
 	y,x = skimage.exposure.histogram(filtered[mask==1]);
 	Esolid = np.argmax(y);
-	print(Esolid,Evoid)
+	#print(Esolid,Evoid)
 	porosity_matrix = interactiveCorrectionNaive(Esolid,Evoid,filtered,mask,porosity_estimated)
 	segmented =(1-porosity_matrix)*mask;
-	map_radius,map_surface = radiusMap(porosity_matrix,resolution)
+	#map_radius,map_surface = radiusMap(porosity_matrix,resolution)
 	print("Average sample porosity:", np.sum(porosity_matrix)/np.sum(mask))
 	if(plot):
 		showData(img,filtered,segmented,pos)
-		showDataColor(porosity_matrix,map_radius,map_surface,pos)
-	return porosity_matrix,resolution,map_radius,map_surface
+		#showDataColor(porosity_matrix,map_radius,map_surface,pos)
+	return porosity_matrix,resolution

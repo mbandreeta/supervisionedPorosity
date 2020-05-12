@@ -4,30 +4,30 @@ import numpy as np
 import tqdm
 
 
-def resample_image(sitk_image, out_spacing=(2, 2, 2), is_label=False):
-	import SimpleITK as sitk
-	original_spacing = sitk_image.GetSpacing()
-	original_size = sitk_image.GetSize()
+# def resample_image(sitk_image, out_spacing=(2, 2, 2), is_label=False):
+	# import SimpleITK as sitk
+	# original_spacing = sitk_image.GetSpacing()
+	# original_size = sitk_image.GetSize()
 
-	out_size = [int(np.round(original_size[0]*(original_spacing[0]/out_spacing[0]))),
-				int(np.round(original_size[1]*(original_spacing[1]/out_spacing[1]))),
-				int(np.round(original_size[2]*(original_spacing[2]/out_spacing[2])))]
+	# out_size = [int(np.round(original_size[0]*(original_spacing[0]/out_spacing[0]))),
+				# int(np.round(original_size[1]*(original_spacing[1]/out_spacing[1]))),
+				# int(np.round(original_size[2]*(original_spacing[2]/out_spacing[2])))]
 
-	resample = sitk.ResampleImageFilter()
-	resample.SetOutputSpacing(out_spacing)
-	resample.SetSize(out_size)
-	resample.SetOutputDirection(sitk_image.GetDirection())
-	resample.SetOutputOrigin(sitk_image.GetOrigin())
-	resample.SetTransform(sitk.Transform())
-	resample.SetDefaultPixelValue(sitk_image.GetPixelIDValue())
+	# resample = sitk.ResampleImageFilter()
+	# resample.SetOutputSpacing(out_spacing)
+	# resample.SetSize(out_size)
+	# resample.SetOutputDirection(sitk_image.GetDirection())
+	# resample.SetOutputOrigin(sitk_image.GetOrigin())
+	# resample.SetTransform(sitk.Transform())
+	# resample.SetDefaultPixelValue(sitk_image.GetPixelIDValue())
 
-	if is_label:
-		resample.SetInterpolator(sitk.sitkNearestNeighbor)
-	else:
-#		resample.SetInterpolator(sitk.sitkBSpline)
-		resample.SetInterpolator(sitk.sitkLinear)
+	# if is_label:
+		# resample.SetInterpolator(sitk.sitkNearestNeighbor)
+	# else:
+# #		resample.SetInterpolator(sitk.sitkBSpline)
+		# resample.SetInterpolator(sitk.sitkLinear)
 
-	return resample.Execute(sitk_image)
+	# return resample.Execute(sitk_image)
 
 
 def histogram_normalization(img):
@@ -42,7 +42,7 @@ def histogram_normalization(img):
 		# p = np.where(h>cutoff);
 		# min_intensity = intensity[p[0][0]];
 		# max_intensity = intensity[p[0][-1]];	
-		p2, p98 = np.percentile(img[:,:,z], (2, 98))
+		p2, p98 = np.percentile(img[:,:,z], (0.5, 99.5))
 		img[:,:,z] = skimage.exposure.rescale_intensity(img[:,:,z], in_range=(p2, p98), out_range=(0,255));
 	return img;
 
